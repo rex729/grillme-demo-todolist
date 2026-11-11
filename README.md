@@ -28,8 +28,8 @@
 
 * **前端 (`frontend/`)**：
   * **Flutter**（專注支援 **Android & iOS** 雙行動平台）
-  * **GetX** 狀態管理、路由管理與依賴注入
-  * **Firebase Authentication + Google Sign-In** 登入並取得 Firebase ID Token
+  * **MVC / 分層架構**：明確切分 **Entity**（純領域模型）、**DTO**（資料傳輸物件）、**API Service**（使用 **Retrofit + Dio** 宣告式定義 API）、**Controller**（GetX 業務狀態協調）與 **View / Widget**（純 UI 介面與元件）。
+  * **Firebase Authentication + Google Sign-In** 登入並取得 Firebase ID Token。
   * 主畫面呈現無篩選器的純列表，支援依到期日（`dueDate: yyyy-mm-dd`）切換 **由舊到新 / 由新到舊** 即時排序、底部彈窗（BottomSheet）新增與編輯、狀態快速切換與左滑刪除。
 * **後端 (`backend/`)**：
   * **Node.js + Express** RESTful API
@@ -41,9 +41,9 @@
 
 ```text
 .
-├── AGENTS.md                        # 【跨模型入口】AI 代理協作與 TDD 強制規範
+├── AGENTS.md                        # 【跨模型入口】AI 代理協作、TDD 強制規範與前端 MVC 架構
 ├── SPEC.md                          # 【規格記憶】由 grill-me 產出的功能與需求規格書
-├── DESIGN.md                        # 【設計記憶】由 grill-me 產出的系統架構與技術設計書
+├── DESIGN.md                        # 【設計記憶】由 grill-me 產出的系統架構、MVC 分層與技術設計書
 ├── .agents/
 │   └── skills/
 │       └── grill-me/
@@ -52,10 +52,10 @@
 │   ├── src/                         # 應用程式、Auth 中介軟體、欄位驗證與路由
 │   ├── test/                        # 後端 TDD 單元與 API 整合測試套件 (19 tests)
 │   └── server.js                    # 伺服器啟動入口 (:8080)
-└── frontend/                        # Flutter + GetX 行動端專案 (Android & iOS)
+└── frontend/                        # Flutter + GetX 行動端專案 (MVC: Entity / DTO / Retrofit / Controller / View)
     ├── android/                     # Android 原生配置
     ├── ios/                         # iOS 原生配置
-    ├── lib/                         # GetX 模組 (auth, todo, routes, providers, models)
+    ├── lib/                         # MVC 分層結構 (entities, dtos, services, modules, routes)
     └── test/                        # 前端 TDD 測試套件 (flutter_test)
 ```
 
