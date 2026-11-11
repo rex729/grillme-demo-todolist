@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../../routes/app_routes.dart';
+import '../../../routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -25,7 +25,6 @@ class AuthController extends GetxController {
       isLoading.value = true;
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        // 使用者主動取消登入視窗
         return;
       }
 

@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'app/data/providers/api_provider.dart';
-import 'app/modules/auth/auth_controller.dart';
+import 'app/data/services/dio_client.dart';
+import 'app/data/services/todo_api_service.dart';
+import 'app/modules/auth/controllers/auth_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'firebase_options.dart';
@@ -14,8 +15,9 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 註冊全域服務與控制器
-  Get.put<ApiProvider>(ApiProvider(), permanent: true);
+  // 註冊全域 Retrofit TodoApiService 與 AuthController
+  final dio = DioClient.createDio();
+  Get.put<TodoApiService>(TodoApiService(dio), permanent: true);
   Get.put<AuthController>(AuthController(), permanent: true);
 
   final initialRoute = FirebaseAuth.instance.currentUser != null

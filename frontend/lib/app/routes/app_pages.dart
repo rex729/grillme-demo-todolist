@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import '../modules/auth/auth_binding.dart';
-import '../modules/auth/login_view.dart';
-import '../modules/todo/todo_binding.dart';
-import '../modules/todo/todo_list_view.dart';
+import '../modules/auth/bindings/auth_binding.dart';
+import '../modules/auth/views/login_view.dart';
+import '../modules/todo/bindings/todo_binding.dart';
+import '../modules/todo/views/todo_list_view.dart';
 import 'app_routes.dart';
 
 class AppPages {

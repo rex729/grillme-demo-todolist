@@ -5,8 +5,9 @@
 | 層級 | 技術選型 | 說明與用途 |
 | :--- | :--- | :--- |
 | **開發方法論** | **TDD (測試驅動開發)** | 嚴格遵守 Red ➔ Green ➔ Refactor 循環，先寫測試並驗證失敗後才寫實作 |
-| **前端框架** | **Flutter** (Dart) | 跨平台行動應用開發（支援 Android & iOS），搭配 `flutter_test` 進行 TDD |
+| **前端框架** | **Flutter** (Dart) | 跨平台行動應用開發（專注支援 Android & iOS），遵守 **MVC (Entity / DTO / Retrofit ApiService / Controller / View)** 架構 |
 | **前端狀態管理** | **GetX** (`get`) | 路由管理（GetPage）、依賴注入（Bindings）、響應式狀態（Rx / Obx）與 UI 彈窗（BottomSheet / Snackbar） |
+| **前端網路與 API** | **Dio** + **Retrofit** (`retrofit`, `json_annotation`) | 透過 `@RestApi()` 宣告式定義 API Endpoint，搭配 Dio Interceptor 自動附加 Firebase ID Token |
 | **前端身分驗證** | `firebase_core`, `firebase_auth`, `google_sign_in` | 原生 Google 登入並取得 Firebase ID Token |
 | **後端語言與框架** | **Node.js** + **Express** | 高效輕量的 RESTful API 伺服器與中介軟體（Middleware）處理，搭配 Node 原生測試執行器 (`node --test`) 進行 TDD |
 | **後端驗證與資料庫** | **Firebase Admin Node.js SDK** (`firebase-admin`) + **Cloud Firestore** | 驗證前端傳來的 Firebase ID Token，並直接讀寫 Firestore NoSQL 資料庫 |
@@ -20,7 +21,7 @@ c:\Workspace\GrillMeDemo\
 ├── AGENTS.md                        # AI 代理通用協作規範 (含 TDD 強制規則)
 ├── SPEC.md                          # 功能與需求規格書
 ├── DESIGN.md                        # 系統架構與技術設計書
-├── frontend/                        # Flutter + GetX 前端專案
+├── frontend/                        # Flutter + GetX 前端專案 (MVC + Entity/DTO/Retrofit)
 │   ├── android/app/google-services.json         # Firebase Android 設定檔
 │   ├── ios/Runner/GoogleService-Info.plist      # Firebase iOS 設定檔
 │   ├── test/                        # 前端 TDD 單元與控制器測試
@@ -29,11 +30,19 @@ c:\Workspace\GrillMeDemo\
 │       ├── app/
 │       │   ├── routes/              # GetX 路由定義 (AppPages, AppRoutes)
 │       │   ├── data/
-│       │   │   ├── models/          # TodoModel (JSON 序列化)
-│       │   │   └── providers/       # ApiProvider (自動夾帶 Bearer Token)
+│       │   │   ├── entities/        # 領域實體層 (TodoEntity)
+│       │   │   ├── dtos/            # 資料傳輸物件層 (TodoDto, UpsertTodoRequestDto, TodoResponseDto)
+│       │   │   └── services/        # API 服務層 (DioClient, TodoApiService - Retrofit @RestApi)
 │       │   └── modules/
-│       │       ├── auth/            # AuthController, AuthBinding, LoginView
-│       │       └── todo/            # TodoController, TodoBinding, TodoListView, TodoBottomSheet
+│       │       ├── auth/
+│       │       │   ├── bindings/    # AuthBinding
+│       │       │   ├── controllers/ # AuthController
+│       │       │   └── views/       # LoginView
+│       │       └── todo/
+│       │           ├── bindings/    # TodoBinding
+│       │           ├── controllers/ # TodoController
+│       │           ├── views/       # TodoListView
+│       │           └── widgets/     # TodoBottomSheet, TodoCardWidget
 └── backend/                         # Node.js + Express 後端專案
     ├── package.json
     ├── server.js                    # 伺服器啟動入口（預設監聽 :8080）

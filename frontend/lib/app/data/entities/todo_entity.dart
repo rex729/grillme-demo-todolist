@@ -1,3 +1,4 @@
+/// 待辦事項狀態列舉值 (Domain Value Constants)
 class TodoState {
   static const String todo = 'todo';
   static const String inProgress = 'in progress';
@@ -19,6 +20,7 @@ class TodoState {
   }
 }
 
+/// 待辦事項分類列舉值 (Domain Value Constants)
 class TodoCategory {
   static const String company = 'company';
   static const String personal = 'personal';
@@ -40,7 +42,8 @@ class TodoCategory {
   }
 }
 
-class TodoModel {
+/// 領域實體 (Domain Entity)：與網路 JSON / DTO 解耦，專注於業務屬性與領域行為
+class TodoEntity {
   final String id;
   final String title;
   final String dueDate; // 格式: yyyy-mm-dd
@@ -49,7 +52,7 @@ class TodoModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  TodoModel({
+  const TodoEntity({
     required this.id,
     required this.title,
     required this.dueDate,
@@ -59,32 +62,14 @@ class TodoModel {
     this.updatedAt,
   });
 
-  factory TodoModel.fromJson(Map<String, dynamic> json) {
-    return TodoModel(
-      id: (json['id'] ?? '') as String,
-      title: (json['title'] ?? '') as String,
-      dueDate: (json['dueDate'] ?? '') as String,
-      state: (json['state'] ?? TodoState.todo) as String,
-      category: (json['category'] ?? TodoCategory.personal) as String,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'].toString())
-          : null,
-    );
+  /// 領域邏輯：計算下一個循環狀態 (todo -> in progress -> done -> todo)
+  String get nextState {
+    if (state == TodoState.todo) return TodoState.inProgress;
+    if (state == TodoState.inProgress) return TodoState.done;
+    return TodoState.todo;
   }
 
-  Map<String, dynamic> toRequestJson() {
-    return {
-      'title': title,
-      'dueDate': dueDate,
-      'state': state,
-      'category': category,
-    };
-  }
-
-  TodoModel copyWith({
+  TodoEntity copyWith({
     String? id,
     String? title,
     String? dueDate,
@@ -93,7 +78,7 @@ class TodoModel {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return TodoModel(
+    return TodoEntity(
       id: id ?? this.id,
       title: title ?? this.title,
       dueDate: dueDate ?? this.dueDate,

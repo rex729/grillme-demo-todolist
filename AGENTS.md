@@ -27,3 +27,13 @@
 2. **Green（撰寫最小可行實作）**：撰寫剛好能通過測試的實作程式碼，並實際執行測試確認全數通過（Green）。
 3. **Refactor（重構）**：在確保測試持續通過的前提下，清理與最佳化程式碼結構。
 4. **禁止未測先寫**：不可跳過測試直接產生業務邏輯程式碼。
+
+## 4. Flutter 前端分層架構強制規範 (MVC + Entity / DTO / Retrofit)
+
+前端 Flutter (`frontend/`) 必須嚴格遵守 **MVC 分層架構**，明確切分以下職責：
+
+1. **Entity (`lib/app/data/entities/`)**：純領域模型（Domain Entity，如 `TodoEntity`），僅包含業務屬性與領域邏輯，不耦合網路傳輸格式。
+2. **DTO (`lib/app/data/dtos/`)**：資料傳輸物件（Data Transfer Object，如 `TodoDto`、`UpsertTodoRequestDto`、`TodoListResponseDto`），負責 JSON 序列化/反序列化，並提供 `toEntity()` 與 `fromEntity()` 轉換方法。
+3. **API Service (`lib/app/data/services/`)**：使用 **`dio` + `retrofit`** 宣告式定義 RESTful API 端點（`@RestApi()`、`@GET`、`@POST`、`@PUT`、`@DELETE`），並透過 Dio Interceptor 自動注入 Firebase Bearer Token。
+4. **Controller (`lib/app/modules/<module>/controllers/`)**：繼承 `GetxController`，協調 `ApiService`（將 DTO 轉為 Entity）並管理響應式 UI 狀態（`RxList<TodoEntity>`）。
+5. **View / Widget (`lib/app/modules/<module>/views/` & `widgets/`)**：純 UI 視圖與元件層，透過 `GetView<T>` 與 `Obx` 綁定 Controller。

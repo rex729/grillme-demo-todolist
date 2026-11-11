@@ -1,39 +1,56 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:cullio_todo_app/app/data/models/todo_model.dart';
-import 'package:cullio_todo_app/app/data/providers/api_provider.dart';
-import 'package:cullio_todo_app/app/modules/todo/todo_controller.dart';
-import 'package:cullio_todo_app/app/modules/todo/todo_list_view.dart';
-import 'package:cullio_todo_app/app/modules/todo/widgets/todo_bottom_sheet.dart';
+import 'package:cullio_todo_app/app/data/entities/todo_entity.dart';
+import 'package:cullio_todo_app/app/data/dtos/todo_dto.dart';
+import 'package:cullio_todo_app/app/data/services/todo_api_service.dart';
+import 'package:cullio_todo_app/app/modules/todo/controllers/todo_controller.dart';
 
-class FakeApiProvider extends ApiProvider {
-  final List<TodoModel> memory = [];
+/// 測試用假 Retrofit TodoApiService (In-Memory Stub)
+class FakeTodoApiService implements TodoApiService {
+  final List<TodoDto> memory = [];
   int _seq = 1;
 
   @override
-  void onInit() {
-    // 測試環境不註冊 Firebase HttpClient 攔截器
+  Future<TodoListResponseDto> getTodos() async {
+    return TodoListResponseDto(data: List<TodoDto>.from(memory));
   }
 
   @override
-  Future<List<TodoModel>> fetchTodos() async {
-    return List<TodoModel>.from(memory);
-  }
-
-  @override
-  Future<TodoModel> createTodo(TodoModel todo) async {
-    final created = todo.copyWith(id: 'todo-${_seq++}');
+  Future<TodoSingleResponseDto> createTodo(UpsertTodoRequestDto body) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    final created = TodoDto(
+      id: 'todo-${_seq++}',
+      title: body.title,
+      dueDate: body.dueDate,
+      state: body.state,
+      category: body.category,
+      createdAt: now,
+      updatedAt: now,
+    );
     memory.add(created);
-    return created;
+    return TodoSingleResponseDto(data: created);
   }
 
   @override
-  Future<TodoModel> updateTodo(TodoModel todo) async {
-    final idx = memory.indexWhere((e) => e.id == todo.id);
+  Future<TodoSingleResponseDto> updateTodo(
+    String id,
+    UpsertTodoRequestDto body,
+  ) async {
+    final idx = memory.indexWhere((e) => e.id == id);
+    final now = DateTime.now().toUtc().toIso8601String();
+    final updated = TodoDto(
+      id: id,
+      title: body.title,
+      dueDate: body.dueDate,
+      state: body.state,
+      category: body.category,
+      createdAt: idx != -1 ? memory[idx].createdAt : now,
+      updatedAt: now,
+    );
     if (idx != -1) {
-      memory[idx] = todo;
+      memory[idx] = updated;
     }
-    return todo;
+    return TodoSingleResponseDto(data: updated);
   }
 
   @override
@@ -43,13 +60,14 @@ class FakeApiProvider extends ApiProvider {
 }
 
 void main() {
-  late FakeApiProvider fakeApi;
+  late FakeTodoApiService fakeApiService;
   late TodoController controller;
 
   setUp(() {
     Get.testMode = true;
     Get.reset();
-    fakeApi = Get.put<ApiProvider>(FakeApiProvider()) as FakeApiProvider;
+    fakeApiService =
+        Get.put<TodoApiService>(FakeTodoApiService()) as FakeTodoApiService;
     controller = Get.put<TodoController>(TodoController());
   });
 
@@ -57,33 +75,55 @@ void main() {
     Get.reset();
   });
 
-  group('TodoModel TDD Tests', () {
-    test('正確反序列化與序列化 TodoModel 欄位', () {
+  group('Entity & DTO Mapping TDD Tests', () {
+    test('TodoDto 反序列化並正確轉換為 TodoEntity 與 UpsertTodoRequestDto', () {
       final json = {
         'id': 't1',
-        'title': '開會準備',
+        'title': '架構重構為 MVC',
         'dueDate': '2026-11-15',
         'state': 'in progress',
         'category': 'company',
+        'createdAt': '2026-11-11T10:00:00Z',
+        'updatedAt': '2026-11-11T10:00:00Z',
       };
-      final model = TodoModel.fromJson(json);
-      expect(model.id, 't1');
-      expect(model.title, '開會準備');
-      expect(model.dueDate, '2026-11-15');
-      expect(model.state, TodoState.inProgress);
-      expect(model.category, TodoCategory.company);
 
-      expect(model.toRequestJson(), {
-        'title': '開會準備',
+      final dto = TodoDto.fromJson(json);
+      final entity = dto.toEntity();
+
+      expect(entity.id, 't1');
+      expect(entity.title, '架構重構為 MVC');
+      expect(entity.dueDate, '2026-11-15');
+      expect(entity.state, TodoState.inProgress);
+      expect(entity.category, TodoCategory.company);
+
+      final reqDto = UpsertTodoRequestDto.fromEntity(entity);
+      expect(reqDto.toJson(), {
+        'title': '架構重構為 MVC',
         'dueDate': '2026-11-15',
         'state': 'in progress',
         'category': 'company',
       });
     });
+
+    test('TodoEntity.nextState 領域邏輯正確循環切換狀態', () {
+      final entity = TodoEntity(
+        id: '1',
+        title: '測試',
+        dueDate: '2026-11-15',
+        state: TodoState.todo,
+        category: TodoCategory.personal,
+      );
+      expect(entity.nextState, TodoState.inProgress);
+      expect(
+        entity.copyWith(state: TodoState.inProgress).nextState,
+        TodoState.done,
+      );
+      expect(entity.copyWith(state: TodoState.done).nextState, TodoState.todo);
+    });
   });
 
-  group('TodoController TDD Tests (Sorting & CRUD)', () {
-    test('新增多筆 Todo 後，支援依 dueDate 由舊到新與由新到舊切換排序', () async {
+  group('TodoController (MVC + Retrofit Service) TDD Tests', () {
+    test('新增多筆 TodoEntity 後，支援依 dueDate 由舊到新與由新到舊切換排序', () async {
       await controller.addTodo(
         title: '中程任務',
         dueDate: '2026-11-20',
@@ -119,7 +159,7 @@ void main() {
       );
     });
 
-    test('快速循環切換狀態 (todo -> in progress -> done -> todo)', () async {
+    test('透過 Controller 快速循環切換 TodoEntity 的 state', () async {
       await controller.addTodo(
         title: '測試狀態切換',
         dueDate: '2026-11-15',
@@ -127,8 +167,7 @@ void main() {
         category: TodoCategory.personal,
       );
 
-      final item = controller.todos.first;
-      await controller.cycleTodoState(item);
+      await controller.cycleTodoState(controller.todos.first);
       expect(controller.todos.first.state, TodoState.inProgress);
 
       await controller.cycleTodoState(controller.todos.first);
@@ -138,7 +177,7 @@ void main() {
       expect(controller.todos.first.state, TodoState.todo);
     });
 
-    test('刪除 Todo 後從列表中移除', () async {
+    test('透過 Controller 刪除 TodoEntity 後從列表中移除', () async {
       await controller.addTodo(
         title: '待刪除項目',
         dueDate: '2026-11-15',

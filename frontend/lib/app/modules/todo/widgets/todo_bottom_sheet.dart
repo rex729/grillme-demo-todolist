@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../data/models/todo_model.dart';
-import '../todo_controller.dart';
+import '../../../data/entities/todo_entity.dart';
+import '../controllers/todo_controller.dart';
 
 class TodoBottomSheet extends StatefulWidget {
-  final TodoModel? existingTodo;
+  final TodoEntity? existingTodo;
 
   const TodoBottomSheet({super.key, this.existingTodo});
 
@@ -154,7 +154,7 @@ class _TodoBottomSheetState extends State<TodoBottomSheet> {
 
               // 3. State 下拉選單 (todo, in progress, done)
               DropdownButtonFormField<String>(
-                value: _selectedState,
+                initialValue: _selectedState,
                 decoration: const InputDecoration(
                   labelText: '狀態 (State)',
                   border: OutlineInputBorder(),
@@ -177,7 +177,7 @@ class _TodoBottomSheetState extends State<TodoBottomSheet> {
 
               // 4. Category 下拉選單 (company, personal, other)
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: '分類 (Category)',
                   border: OutlineInputBorder(),
