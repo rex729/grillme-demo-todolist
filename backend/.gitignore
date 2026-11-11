@@ -1,0 +1,4 @@
+# 忽略 Firebase 服務帳戶私鑰與 Node.js 套件目錄
+serviceAccountKey.json
+node_modules/
+.env
